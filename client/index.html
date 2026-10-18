@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Umar Farouq — Software Engineer &amp; Product Builder</title>
+  <meta name="description"
+    content="Umar Farouq is a software engineer and product-minded builder turning thoughtful ideas into useful, dependable experiences on the web." />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0e100d" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Umar Farouq — Software Engineer &amp; Product Builder" />
+  <meta property="og:description"
+    content="A software engineer and product-minded builder turning thoughtful ideas into useful, dependable experiences on the web." />
+
+  <!--
+      Runs before first paint so the saved theme is applied with no flash.
+      Keep the storage key ("theme") in sync with src/stores/theme.ts.
+      Default is dark (the approved primary design); a saved choice wins.
+    -->
+  <script>
+    (function () {
+      var theme = "dark";
+      try {
+        var stored = localStorage.getItem("theme");
+        if (stored === "light" || stored === "dark") theme = stored;
+      } catch (e) {
+        /* storage unavailable: fall back to the default */
+      }
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

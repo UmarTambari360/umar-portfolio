@@ -1,0 +1,18 @@
+{
+  "name": "umar-portfolio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:server": "pnpm --filter @umar-portfolio/server dev",
+    "dev:client": "pnpm --filter @umar-portfolio/client dev",
+    "db:generate": "pnpm --filter @umar-portfolio/server db:generate",
+    "db:migrate": "pnpm --filter @umar-portfolio/server db:migrate",
+    "db:studio": "pnpm --filter @umar-portfolio/server db:studio",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.29.3"
+}
