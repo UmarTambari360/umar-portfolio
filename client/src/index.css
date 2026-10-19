@@ -41,6 +41,11 @@
   /* lime used AS text */
   --focus-ring: #c7f540;
 
+  /* Destructive actions and errors (admin). Used as text, border or fill.
+     6.9:1 on --surface, 7.5:1 on --bg; 7.5:1 for --danger-fg placed on it. */
+  --danger: #ff7a6b;
+  --danger-fg: #0e100e;
+
   /* "mean something." treatment: lime text in dark, dark text on lime in light */
   --highlight-fg: #c7f540;
   --highlight-bg: transparent;
@@ -75,6 +80,10 @@
      olive from the same hue family (5.7:1 on --bg, 6.2:1 on --surface). */
   --accent-text: #4f6a00;
   --focus-ring: #4f6a00;
+
+  /* 6.0:1 on --bg, 6.5:1 on --surface and for --danger-fg placed on it. */
+  --danger: #b3261e;
+  --danger-fg: #fffffb;
 
   --highlight-fg: #1f211c;
   /* 12.8:1 on lime */
@@ -159,6 +168,8 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
   --color-focus-ring: var(--focus-ring);
   --color-art: var(--art);
   --color-art-ink: var(--art-ink);

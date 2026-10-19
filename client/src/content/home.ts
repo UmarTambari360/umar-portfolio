@@ -31,7 +31,7 @@ export interface Metric {
 }
 
 export const METRICS: readonly Metric[] = [
-  { value: "More soon", label: "New projects are on the way", accent: true },
+  { value: "More soon", label: "New work is on the way", accent: true },
   { value: "Full-stack", label: "From data to interface" },
   { value: "Building", label: "With purpose, not just hype" },
 ];
@@ -74,17 +74,18 @@ export const ABOUT = {
 export const TOOLKIT = {
   eyebrow: "Tools I reach for",
   title: "A practical toolkit.",
-  // Labels are stored exactly as displayed (e.g. "REST APIs" keeps its lowercase s).
   items: [
     "TYPESCRIPT",
+    "NEXT.JS",
     "REACT",
-    "NODE.JS",
+    "NODE JS",
     "EXPRESS",
     "POSTGRESQL",
     "DRIZZLE ORM",
     "REDIS",
     "DOCKER",
     "REST APIs",
+    "GRAPHQL",
   ],
 } as const;
 

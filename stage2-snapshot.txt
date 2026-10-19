@@ -1,0 +1,742 @@
+
+===== client/src/App.tsx =====
+import { Footer }     from "@/components/layout/footer";
+import { Header }     from "@/components/layout/header";
+import { About }      from "@/components/sections/about";
+import { ContactCta } from "@/components/sections/contact-cta";
+import { Hero }       from "@/components/sections/hero";
+import { Metrics }    from "@/components/sections/metrics";
+import { Projects }   from "@/components/sections/projects";
+import { Toolkit }    from "@/components/sections/toolkit";
+import { useVisitTracking } from "@/hooks/use-visit-tracking";
+
+export default function App() {
+  useVisitTracking();
+
+  return (
+    <div id="top">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-button focus:bg-accent focus:px-4 focus:py-2 focus:text-caption focus:font-bold focus:text-accent-fg"
+      >
+        Skip to content
+      </a>
+      <Header />
+      <main id="main">
+        <Hero />
+        <Metrics />
+        <Projects />
+        <About />
+        <Toolkit />
+        <ContactCta />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+===== client/src/main.tsx =====
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "@fontsource/space-grotesk/500.css";
+import "@fontsource/space-grotesk/700.css";
+import "@fontsource/dm-sans/400.css";
+import "@fontsource/dm-sans/500.css";
+import "@fontsource/dm-sans/700.css";
+import "./index.css";
+import App from "./App.tsx";
+
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error('Root element "#root" was not found in index.html');
+}
+
+createRoot(rootElement).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+
+===== client/src/lib/analytics.ts =====
+import { apiPost } from "@/lib/api";
+
+/*
+  Privacy-first visit tracking for POST /api/analytics/track.
+
+  How the server behaves (server/src/lib/analytics.ts):
+  - It stores ONE row per visitor per day (hash of IP + date) and silently
+    drops every later ping from that visitor.
+  - That row can carry a `projectClicked`, but only if it is in the FIRST ping.
+
+  So a ping on page load would "use up" the visitor's row for the day and every
+  project click after it would be lost. Instead the client sends exactly ONE
+  ping per page visit, at the moment it has the most to report:
+    1. the visitor clicks a project link   -> ping now, with `projectClicked`
+    2. otherwise, the visitor leaves/hides  -> ping then (page view only)
+
+  Nothing is stored in the browser (no cookies, no localStorage). Tracking is
+  skipped when Do Not Track / Global Privacy Control is on, and in development
+  unless VITE_ENABLE_ANALYTICS=true.
+*/
+
+const TRACK_PATH = "/analytics/track";
+
+// Loose 8-4-4-4-12 hex check. The server casts the body without validating it,
+// and an invalid id would make Postgres throw *after* the day's slot is taken.
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+interface TrackPayload {
+  referrer?: string;
+  projectClicked?: string;
+}
+
+/** The one ping for this page visit has been sent (or tracking is off). */
+let pingSent = false;
+let enabled: boolean | undefined;
+
+function isEnabled(): boolean {
+  if (enabled !== undefined) return enabled;
+
+  const allowedHere =
+    import.meta.env.PROD || import.meta.env.VITE_ENABLE_ANALYTICS === "true";
+  const globalPrivacyControl =
+    (navigator as Navigator & { globalPrivacyControl?: boolean })
+      .globalPrivacyControl === true;
+  const doNotTrack =
+    navigator.doNotTrack === "1" || navigator.doNotTrack === "yes";
+
+  enabled = allowedHere && !globalPrivacyControl && !doNotTrack;
+  return enabled;
+}
+
+/**
+ * Where the visitor came from, reduced to an origin ("https://t.co").
+ * Same-origin referrers (reloads, in-site navigation) are not interesting.
+ */
+function readReferrer(): string | undefined {
+  if (!document.referrer) return undefined;
+  try {
+    const { origin } = new URL(document.referrer);
+    return origin === window.location.origin ? undefined : origin;
+  } catch {
+    return undefined;
+  }
+}
+
+function sendPing(projectId?: string): void {
+  if (pingSent) return;
+  pingSent = true;
+
+  const payload: TrackPayload = {};
+  const referrer = readReferrer();
+  if (referrer) payload.referrer = referrer;
+  if (projectId && UUID_PATTERN.test(projectId)) {
+    payload.projectClicked = projectId;
+  }
+
+  // Fire and forget: analytics must never affect, slow or break the page.
+  apiPost(TRACK_PATH, payload, { keepalive: true }).catch(() => undefined);
+}
+
+/**
+ * Registers the "visitor left" listeners. Returns a cleanup function.
+ * `visibilitychange` is the reliable signal on mobile (tab switch, app switch);
+ * `pagehide` covers closing/navigating away on desktop.
+ */
+export function startVisitTracking(): () => void {
+  if (!isEnabled()) return () => undefined;
+
+  const onVisibilityChange = () => {
+    if (document.visibilityState === "hidden") sendPing();
+  };
+  const onPageHide = () => {
+    sendPing();
+  };
+
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  window.addEventListener("pagehide", onPageHide);
+
+  return () => {
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.removeEventListener("pagehide", onPageHide);
+  };
+}
+
+/** Call when a visitor follows a project's live/source link. First click wins. */
+export function trackProjectClick(projectId: string): void {
+  if (!isEnabled()) return;
+  sendPing(projectId);
+}
+===== client/src/hooks/use-visit-tracking.ts =====
+import { useEffect } from "react";
+import { startVisitTracking } from "@/lib/analytics";
+
+/** Mount once near the app root. */
+export function useVisitTracking(): void {
+  useEffect(() => startVisitTracking(), []);
+}
+===== client/src/stores/theme.ts =====
+import { create } from "zustand";
+
+export type Theme = "dark" | "light";
+
+// Keep in sync with the inline script in index.html.
+const STORAGE_KEY = "theme";
+
+/** The inline script in index.html has already set data-theme before React runs. */
+function readTheme(): Theme {
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
+
+/** Point the browser UI color at the active --bg token (mobile address bar). */
+function syncThemeColor(): void {
+  const bg = getComputedStyle(document.documentElement)
+    .getPropertyValue("--bg")
+    .trim();
+  if (!bg) return;
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", bg);
+}
+
+function applyTheme(theme: Theme): void {
+  document.documentElement.dataset.theme = theme;
+  try {
+    localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    // Storage can be blocked (e.g. private mode); the theme still applies, it just won't persist.
+  }
+  syncThemeColor();
+}
+
+interface ThemeState {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+}
+
+export const useThemeStore = create<ThemeState>()((set, get) => ({
+  theme: readTheme(),
+  setTheme: (theme) => {
+    applyTheme(theme);
+    set({ theme });
+  },
+  toggleTheme: () => {
+    get().setTheme(get().theme === "dark" ? "light" : "dark");
+  },
+}));
+
+syncThemeColor();
+===== client/src/components/ui/theme-toggle.tsx =====
+import { useThemeStore } from "@/stores/theme";
+import { cn } from "@/lib/cn";
+
+/**
+ * DARK / LIGHT segmented switch. A single native button (role="switch") so it
+ * is keyboard operable; the visible labels are decorative for assistive tech.
+ */
+export function ThemeToggle() {
+  const theme = useThemeStore((state) => state.theme);
+  const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const isLight = theme === "light";
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isLight}
+      aria-label="Light theme"
+      onClick={toggleTheme}
+      className="relative grid h-9.25 w-36.75 grid-cols-2 items-center rounded-full bg-surface-raised p-1 text-micro font-bold tracking-label uppercase"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-accent transition-transform duration-300 motion-reduce:transition-none",
+          isLight && "translate-x-full",
+        )}
+      />
+      <span
+        aria-hidden
+        className={cn(
+          "relative z-10 text-center transition-colors",
+          isLight ? "text-fg-muted" : "text-accent-fg",
+        )}
+      >
+        Dark
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "relative z-10 text-center transition-colors",
+          isLight ? "text-accent-fg" : "text-fg-muted",
+        )}
+      >
+        Light
+      </span>
+    </button>
+  );
+}
+
+===== client/src/components/layout/mobile-menu.tsx =====
+import { 
+    useEffect, useRef, 
+    type KeyboardEvent, 
+    type RefObject }    from "react";
+import { X }            from "lucide-react";
+import { NAV_LINKS }    from "@/content/home";
+import { Container }    from "@/components/ui/container";
+import { ThemeToggle }  from "@/components/ui/theme-toggle";
+import { Wordmark }     from "@/components/ui/wordmark";
+import { useLockBodyScroll } from "@/hooks/use-lock-body-scroll";
+import { cn } from "@/lib/cn";
+
+interface MobileMenuProps {
+  id: string;
+  open: boolean;
+  /** `returnFocus` is false when a link was chosen (focus should follow the navigation). */
+  onClose: (returnFocus: boolean) => void;
+  /** Receives focus when the menu opens. */
+  closeButtonRef: RefObject<HTMLButtonElement | null>;
+}
+
+const FOCUSABLE = "a[href], button:not([disabled])";
+
+export function MobileMenu({
+  id,
+  open,
+  onClose,
+  closeButtonRef,
+}: MobileMenuProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useLockBodyScroll(open);
+
+  // Move focus into the dialog when it opens.
+  useEffect(() => {
+    if (open) closeButtonRef.current?.focus();
+  }, [open, closeButtonRef]);
+
+  // Escape closes the menu.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") onClose(true);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  // Keep Tab / Shift+Tab inside the dialog while it is open.
+  const trapFocus = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Tab") return;
+    const items = panelRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE);
+    const first = items?.[0];
+    const last = items?.[items.length - 1];
+    if (!first || !last) return;
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return (
+    <div
+      ref={panelRef}
+      id={id}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site menu"
+      inert={!open}
+      onKeyDown={trapFocus}
+      className={cn(
+        "fixed inset-0 z-50 flex flex-col overscroll-contain bg-bg motion-reduce:transition-none md:hidden",
+        // Opening shows the menu immediately (so it can take focus) and fades in;
+        // closing fades out first and only then switches to `visibility: hidden`.
+        open
+          ? "visible translate-y-0 opacity-100 [transition:opacity_300ms_ease-out,transform_300ms_ease-out,visibility_0s_linear_0s]"
+          : "invisible -translate-y-2 opacity-0 [transition:opacity_300ms_ease-out,transform_300ms_ease-out,visibility_0s_linear_300ms]",
+      )}
+    >
+      <div className="border-b border-border">
+        <Container className="flex h-19.25 items-center justify-between">
+          <Wordmark />
+          <button
+            ref={closeButtonRef}
+            type="button"
+            aria-label="Close menu"
+            onClick={() => {
+              onClose(true);
+            }}
+            className="grid size-11 place-items-center rounded-full bg-surface-raised text-fg transition-colors hover:text-accent-text"
+          >
+            <X aria-hidden size={20} />
+          </button>
+        </Container>
+      </div>
+
+      <nav aria-label="Mobile" className="min-h-0 flex-1 overflow-y-auto pt-6">
+        <Container>
+          <ul>
+            {NAV_LINKS.map((link, index) => (
+              <li
+                key={link.href}
+                style={{
+                  transitionDelay: open ? `${90 + index * 55}ms` : "0ms",
+                }}
+                className={cn(
+                  "border-b border-border transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+                  open
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-3 opacity-0",
+                )}
+              >
+                <a
+                  href={link.href}
+                  onClick={() => {
+                    onClose(false);
+                  }}
+                  className="flex items-baseline gap-5 py-5 font-display text-[2.75rem] leading-none font-bold text-fg uppercase transition-colors hover:text-accent-text focus-visible:text-accent-text active:text-accent-text"
+                >
+                  <span className="w-6 text-label font-medium tracking-label text-accent-text">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </nav>
+
+      {/* Wrapper keeps the container full-width inside this flex column. */}
+      <div className="w-full">
+        <Container className="flex items-center justify-between pt-6 pb-8">
+          <span className="text-micro tracking-label text-fg-subtle uppercase">
+            Theme
+          </span>
+          <ThemeToggle />
+        </Container>
+      </div>
+    </div>
+  );
+}
+
+===== client/src/components/ui/link-button.tsx =====
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { buttonClasses, type ButtonVariant } from "./button-styles";
+
+interface LinkButtonProps extends Omit<
+  ComponentPropsWithoutRef<"a">,
+  "href" | "className"
+> {
+  href: string;
+  variant?: ButtonVariant;
+  /** Opens in a new tab with a safe `rel`, and announces that to screen readers. */
+  external?: boolean;
+  icon?: ReactNode;
+  className?: string;
+}
+
+/** Anchor styled as a button. Always renders a real, navigable link. */
+export function LinkButton({
+  href,
+  variant = "primary",
+  external = false,
+  icon,
+  className,
+  children,
+  ...props
+}: LinkButtonProps) {
+  return (
+    <a
+      href={href}
+      className={buttonClasses(variant, className)}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      {...props}
+    >
+      <span>
+        {children}
+        {external ? (
+          <span className="sr-only"> (opens in a new tab)</span>
+        ) : null}
+      </span>
+      {icon ? <span aria-hidden>{icon}</span> : null}
+    </a>
+  );
+}
+
+===== client/src/components/ui/container.tsx =====
+import type { ComponentPropsWithoutRef } from "react";
+import { cn } from "@/lib/cn";
+
+/**
+ * Page-width column: 1220px of content (box-content) with 24px gutters on
+ * mobile and 42px from tablet up (as in the 390 and 768 frames).
+ */
+export function Container({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      className={cn(
+        "mx-auto box-content max-w-page px-6 md:px-10.5",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+===== client/src/components/sections/projects.tsx =====
+import { WORK }                from "@/content/home";
+import { useFeaturedProjects } from "@/hooks/use-featured-projects";
+import { Container }         from "@/components/ui/container";
+import { SectionHeading }  from "@/components/ui/section-heading";
+import { buttonClasses } from "@/components/ui/button-styles";
+import { ProjectCard } from "./project-card";
+
+function ProjectsSkeleton() {
+  return (
+    <div role="status" aria-live="polite">
+      <span className="sr-only">Loading projects</span>
+      <ul aria-hidden className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+        {[0, 1].map((key) => (
+          <li
+            key={key}
+            className="h-62.5 animate-pulse rounded-card bg-surface motion-reduce:animate-none lg:h-120"
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function Projects() {
+  const { state, retry } = useFeaturedProjects();
+
+  return (
+    <section
+      id="work"
+      aria-labelledby="work-heading"
+      className="scroll-mt-6 pt-13 pb-7.25 md:pt-11.5 lg:pt-22 lg:pb-12.5"
+    >
+      <Container>
+        <SectionHeading
+          id="work-heading"
+          eyebrow={WORK.eyebrow}
+          title={WORK.title}
+          description={WORK.description}
+        />
+
+        <div className="mt-2.75 md:mt-6.25 lg:mt-8">
+          {state.status === "loading" ? <ProjectsSkeleton /> : null}
+
+          {state.status === "error" ? (
+            <div role="alert" className="rounded-card bg-surface p-8">
+              <p className="font-display text-title font-bold">
+                Couldn’t load projects.
+              </p>
+              <p className="mt-2 text-caption text-fg-muted">{state.message}</p>
+              <button
+                type="button"
+                onClick={retry}
+                className={buttonClasses("primary", "mt-6")}
+              >
+                Try again
+              </button>
+            </div>
+          ) : null}
+
+          {state.status === "success" && state.projects.length === 0 ? (
+            <p className="rounded-card bg-surface p-8 text-body text-fg-muted">
+              {WORK.emptyMessage}
+            </p>
+          ) : null}
+
+          {state.status === "success" && state.projects.length > 0 ? (
+            <ul className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+              {state.projects.map((project, index) => (
+                <ProjectCard key={project.id} project={project} index={index} />
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+===== client/src/components/sections/project-cover.tsx =====
+import { useState }                     from "react";
+import { safeExternalUrl, statusLabel } from "@/lib/projects";
+import type { Project }                 from "@/types/api";
+import { DashboardArt, EditorialArt }   from "./project-cover-art";
+
+interface ProjectCoverProps {
+  project: Project;
+  index: number;
+}
+
+export function ProjectCover({ project, index }: ProjectCoverProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = safeExternalUrl(project.imageUrl);
+  const showImage = imageUrl !== null && !imageFailed;
+
+  return (
+    <div className="relative h-66.75 overflow-hidden bg-art">
+      {showImage ? (
+        <img
+          src={imageUrl}
+          alt=""
+          loading="lazy"
+          onError={() => {
+            setImageFailed(true);
+          }}
+          className="h-full w-full object-cover"
+        />
+      ) : index % 2 === 0 ? (
+        <EditorialArt
+          name={project.name}
+          statusText={statusLabel(project.status)}
+        />
+      ) : (
+        <DashboardArt name={project.name} />
+      )}
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1.5 bg-accent"
+      />
+    </div>
+  );
+}
+
+===== client/src/components/sections/project-cover-art.tsx =====
+interface CoverArtProps {
+  name: string;
+  statusText: string;
+}
+
+export function EditorialArt({ name, statusText }: CoverArtProps) {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0 flex flex-col px-7.25 pt-8.5 pb-9"
+    >
+      <p className="truncate font-display text-[1.375rem] leading-none font-bold text-art-fg uppercase">
+        {name}
+      </p>
+      <p className="mt-2 text-micro font-bold tracking-label text-accent uppercase">
+        {statusText}
+      </p>
+      <div className="mt-auto grid h-29 grid-cols-[1fr_1.08fr] gap-4">
+        <div className="rounded-button bg-art-ink p-4">
+          <span className="block h-2 w-3/5 rounded-full bg-art-bar/80" />
+          <span className="mt-2 block h-2 w-2/5 rounded-full bg-art-bar/40" />
+        </div>
+        <div className="relative rounded-button bg-art-ink-2">
+          <span className="absolute top-4 left-4 h-11.5 w-23 bg-accent" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const BAR_HEIGHTS = [26, 46, 62, 26, 46, 62, 26] as const;
+
+export function DashboardArt({ name }: Pick<CoverArtProps, "name">) {
+  return (
+    <div aria-hidden className="absolute inset-0 px-6.25 pt-4.5 pb-5">
+      <div className="flex h-8.25 items-center rounded-button bg-art-ink px-4">
+        <p className="truncate text-micro font-bold tracking-label text-art-fg uppercase">
+          {name}
+        </p>
+      </div>
+      <div className="mt-4 grid h-44.5 grid-cols-[114px_1fr] gap-3">
+        <div className="rounded-button bg-art-ink p-2">
+          <span className="block h-5.5 w-22 rounded-button bg-accent" />
+        </div>
+        <div className="grid grid-rows-[75px_1fr] gap-3">
+          <div className="grid grid-cols-[1fr_1.27fr] gap-3">
+            <div className="rounded-button bg-art-ink" />
+            <div className="rounded-button bg-art-ink" />
+          </div>
+          <div className="flex items-end justify-around rounded-button bg-art-ink px-4 pb-3">
+            {BAR_HEIGHTS.map((height, index) => (
+              <span
+                key={index}
+                className="w-4.5 bg-accent"
+                style={{ height }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===== client/eslint.config.js =====
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import tseslint from 'typescript-eslint'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      globals: globals.browser,
+    },
+  },
+])
+
+===== client/tsconfig.app.json =====
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Strictness */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "erasableSyntaxOnly": true,
+
+    /* Path alias: "@/lib/cn" -> "src/lib/cn" (mirrored in vite.config.ts) */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}

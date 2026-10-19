@@ -1,13 +1,16 @@
-import { Footer } from "@/components/layout/footer";
-import { Header } from "@/components/layout/header";
-import { About } from "@/components/sections/about";
+import { Footer }     from "@/components/layout/footer";
+import { Header }     from "@/components/layout/header";
+import { About }      from "@/components/sections/about";
 import { ContactCta } from "@/components/sections/contact-cta";
-import { Hero } from "@/components/sections/hero";
-import { Metrics } from "@/components/sections/metrics";
-import { Projects } from "@/components/sections/projects";
-import { Toolkit } from "@/components/sections/toolkit";
+import { Hero }       from "@/components/sections/hero";
+import { Metrics }    from "@/components/sections/metrics";
+import { Projects }   from "@/components/sections/projects";
+import { Toolkit }    from "@/components/sections/toolkit";
+import { useVisitTracking } from "@/hooks/use-visit-tracking";
 
 export default function App() {
+  useVisitTracking();
+
   return (
     <div id="top">
       <a

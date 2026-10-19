@@ -3,11 +3,8 @@ import { safeExternalUrl } from "@/lib/projects";
 interface SiteConfig {
   name: string;
   wordmark: string;
-  /** Contact address. The CTA and footer "Email" link stay hidden until this is set. */
   email: string;
-  /** Full https URL. Hidden until set. */
   github: string;
-  /** Full https URL. Hidden until set. */
   linkedin: string;
 }
 
@@ -15,10 +12,10 @@ interface SiteConfig {
 // rendered, so there are never buttons that point nowhere.
 export const SITE: SiteConfig = {
   name: "Umar Farouq",
-  wordmark: "UF.",
-  email: "",
-  github: "",
-  linkedin: "",
+  wordmark: "TAMBARI.",
+  email: "umarmubay360@gmail.com",
+  github: "https://github.com/UmarTambari360",
+  linkedin: "https://linkedin.com/in/umar-farouq",
 };
 
 export interface SocialLink {

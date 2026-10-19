@@ -17,7 +17,7 @@ export function ThemeToggle() {
       aria-checked={isLight}
       aria-label="Light theme"
       onClick={toggleTheme}
-      className="relative grid h-[37px] w-[147px] grid-cols-2 items-center rounded-full bg-surface-raised p-1 text-micro font-bold tracking-label uppercase"
+      className="relative grid h-9.25 w-36.75 grid-cols-2 items-center rounded-full bg-surface-raised p-1 text-micro font-bold tracking-label uppercase"
     >
       <span
         aria-hidden
