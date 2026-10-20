@@ -1,0 +1,50 @@
+# Caddy: web server + reverse proxy + automatic HTTPS in one file.
+#
+# SITE_ADDRESS comes from the environment (docker-compose.prod.yml):
+#   - a real domain  (portfolio.example.com) -> Caddy gets a free Let's Encrypt
+#     certificate by itself and redirects HTTP to HTTPS
+#   - "localhost" or ":80"                    -> for testing on your own machine
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	header {
+		# Tell browsers to always use HTTPS for this site (ignored over plain HTTP).
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Keeps the admin pages out of search results. This header is the primary
+	# layer; the <meta> tag in the admin code is only the backup (crawlers that
+	# do not run JavaScript never see the meta tag).
+	@admin path /admin /admin/*
+	header @admin X-Robots-Tag "noindex, nofollow"
+
+	# Everything under /api goes to the Express server on the internal Docker
+	# network. The browser only ever talks to this one origin, which is why the
+	# login cookie "just works" without any CORS or cross-site cookie setup.
+	handle /api/* {
+		reverse_proxy server:5000
+	}
+
+	# Everything else is the React app. Unknown paths (like /projects/my-project
+	# or /admin/analytics) fall back to index.html so React Router can handle them.
+	handle {
+		root * /srv
+		# Hashed assets (/assets/app-3f9a1c.js) never change, so cache them forever.
+		# Everything else (index.html, favicon) is revalidated on every visit so a
+		# new deploy shows up immediately. The two rules use opposite matchers on
+		# purpose: Caddy orders same-named directives by matcher specificity, not
+		# by where they appear, so "default first, override second" would NOT work.
+		@assets path /assets/*
+		@pages not path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		header @pages Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+

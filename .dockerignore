@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+.git
+.gitignore
+**/.env
+**/.env.*
+!**/.env.example
+backups
+docs
+*.md
+*.txt
+**/*.log
+.DS_Store
+
