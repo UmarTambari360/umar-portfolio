@@ -1,6 +1,11 @@
 node_modules
 dist
 .env
-.env*.local
+.env.*
+# ...but keep the committed templates:
+!.env.example
+!.env.*.example
 *.log
 .DS_Store
+backups
+

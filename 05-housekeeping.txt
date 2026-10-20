@@ -1,0 +1,57 @@
+HOUSEKEEPING: root scripts, .gitignore, client .env.example (moved)
+==============================================================================
+Format: each file starts with a line  ===== <path>  [NEW|MODIFIED] =====
+Everything between that line and the next marker is the COMPLETE file.
+Paths are relative to the repo root (the folder containing client/ and server/).
+These are exact copies of the files that were type-checked, linted, built and run.
+==============================================================================
+
+===== package.json  [MODIFIED] =====
+{
+  "name": "umar-portfolio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev:server": "pnpm --filter @umar-portfolio/server dev",
+    "dev:client": "pnpm --filter @umar-portfolio/client dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm --filter @umar-portfolio/server typecheck && pnpm --filter @umar-portfolio/client exec tsc -b",
+    "lint": "pnpm --filter @umar-portfolio/client lint",
+    "db:generate": "pnpm --filter @umar-portfolio/server db:generate",
+    "db:migrate": "pnpm --filter @umar-portfolio/server db:migrate",
+    "db:studio": "pnpm --filter @umar-portfolio/server db:studio",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:migrate:prod": "pnpm --filter @umar-portfolio/server db:migrate:prod",
+    "db:seed": "pnpm --filter @umar-portfolio/server db:seed",
+    "hash-password": "pnpm --filter @umar-portfolio/server hash-password"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.29.3"
+}
+
+===== .gitignore  [MODIFIED] =====
+node_modules
+dist
+.env
+.env.*
+# ...but keep the committed templates:
+!.env.example
+!.env.*.example
+*.log
+.DS_Store
+backups
+
+===== client/.env.example  [NEW] =====
+# Copy to client/.env.local to change local behaviour. Never put secrets in
+# VITE_* variables: Vite embeds them in the browser bundle.
+#
+# (This file used to live in client/src/. Vite reads .env files from the
+# client/ folder itself, so that is where the template belongs.)
+
+# Production builds always send analytics. Set to "true" to also send them from
+# `pnpm dev` (otherwise your dev traffic stays out of the analytics table).
+VITE_ENABLE_ANALYTICS=
+
