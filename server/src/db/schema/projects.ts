@@ -19,6 +19,7 @@ export const projectStatusEnum = pgEnum("project_status", [
 export const projects = pgTable("projects", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
   tagline: text("tagline").notNull(),
   description: text("description").notNull(),
   stack: text("stack").array().notNull(),
@@ -36,3 +37,4 @@ export const projects = pgTable("projects", {
 
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
+

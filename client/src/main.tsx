@@ -7,7 +7,7 @@ import "@fontsource/dm-sans/400.css";
 import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/700.css";
 import "./index.css";
-import { router } from "./router.tsx";
+import { router } from "./router";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

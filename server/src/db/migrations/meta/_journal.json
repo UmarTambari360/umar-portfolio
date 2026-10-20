@@ -8,6 +8,14 @@
       "when": 1792147728429,
       "tag": "0000_lean_ares",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792459447284,
+      "tag": "0001_add_project_slug",
+      "breakpoints": true
     }
   ]
 }
+

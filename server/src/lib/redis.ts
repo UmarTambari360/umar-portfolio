@@ -1,8 +1,7 @@
 import { Redis } from 'ioredis';
+import { env } from './env.js';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-
-export const redis = new Redis(redisUrl, {
+export const redis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: 3,
 });
 
@@ -13,3 +12,4 @@ redis.on('connect', () => {
 redis.on('error', (err: Error) => {
   console.error('[Redis] Connection error:', err.message);
 });
+

@@ -1,25 +1,13 @@
 import type { ComponentProps, ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
+import {
+  BUTTON_BASE,
+  BUTTON_SIZES,
+  BUTTON_VARIANTS,
+  type ButtonSize,
+  type ButtonVariant,
+} from "@/admin/components/button-styles";
 import { cn } from "@/lib/cn";
-
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
-type ButtonSize = "md" | "sm";
-
-const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-button text-micro font-bold tracking-label uppercase transition-[color,background-color,border-color,filter] duration-200 motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60";
-
-const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-accent-fg enabled:hover:brightness-105",
-  secondary:
-    "border border-border bg-transparent text-fg enabled:hover:bg-surface-raised",
-  danger: "bg-danger text-danger-fg enabled:hover:brightness-105",
-  ghost: "text-fg enabled:hover:text-accent-text",
-};
-
-const SIZES: Record<ButtonSize, string> = {
-  md: "h-11 px-5",
-  sm: "h-9 px-3.5",
-};
 
 interface ButtonProps extends ComponentProps<"button"> {
   variant?: ButtonVariant;
@@ -45,7 +33,7 @@ export function Button({
       type={type}
       disabled={disabled === true || loading}
       aria-busy={loading || undefined}
-      className={cn(BASE, VARIANTS[variant], SIZES[size], className)}
+      className={cn(BUTTON_BASE, BUTTON_VARIANTS[variant], BUTTON_SIZES[size], className)}
       {...props}
     >
       {loading ? (
@@ -61,3 +49,4 @@ export function Button({
     </button>
   );
 }
+

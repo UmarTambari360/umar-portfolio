@@ -1,4 +1,6 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { buttonClasses } from "@/components/ui/button-styles";
 import { LinkButton } from "@/components/ui/link-button";
 import { trackProjectClick } from "@/lib/analytics";
 import {
@@ -16,8 +18,9 @@ interface ProjectCardProps {
 }
 
 /**
- * One featured project. Every field is real data from the API; the action
- * links only exist when the project actually has a live or source URL.
+ * One featured project. Every field is real data from the API. "Details" opens
+ * the project page; the live and source links only exist when the project
+ * actually has those URLs.
  *
  * Desktop (lg+) shows a cover above the text. Tablet and mobile use the
  * compact text card from those frames: lime bar on the left, stack and links
@@ -84,40 +87,47 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
               </ul>
             ) : null}
 
-            {liveUrl || sourceUrl ? (
-              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
-                {liveUrl ? (
-                  <LinkButton
-                    href={liveUrl}
-                    variant="link"
-                    external
-                    className="text-fg lg:text-accent-text"
-                    onClick={recordClick}
-                    onAuxClick={recordClick}
-                    icon={<ArrowUpRight size={11} />}
-                  >
-                    View live
-                    <span className="sr-only"> for {project.name}</span>
-                  </LinkButton>
-                ) : null}
-                {sourceUrl ? (
-                  <LinkButton
-                    href={sourceUrl}
-                    variant="ghost"
-                    external
-                    onClick={recordClick}
-                    onAuxClick={recordClick}
-                    icon={<ArrowUpRight size={11} />}
-                  >
-                    Source
-                    <span className="sr-only"> for {project.name}</span>
-                  </LinkButton>
-                ) : null}
-              </div>
-            ) : null}
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+              <Link
+                to={`/projects/${project.slug}`}
+                className={buttonClasses("ghost")}
+              >
+                Details
+                <span className="sr-only"> for {project.name}</span>
+                <ArrowRight aria-hidden size={11} />
+              </Link>
+              {liveUrl ? (
+                <LinkButton
+                  href={liveUrl}
+                  variant="link"
+                  external
+                  className="text-fg lg:text-accent-text"
+                  onClick={recordClick}
+                  onAuxClick={recordClick}
+                  icon={<ArrowUpRight size={11} />}
+                >
+                  View live
+                  <span className="sr-only"> for {project.name}</span>
+                </LinkButton>
+              ) : null}
+              {sourceUrl ? (
+                <LinkButton
+                  href={sourceUrl}
+                  variant="ghost"
+                  external
+                  onClick={recordClick}
+                  onAuxClick={recordClick}
+                  icon={<ArrowUpRight size={11} />}
+                >
+                  Source
+                  <span className="sr-only"> for {project.name}</span>
+                </LinkButton>
+              ) : null}
+            </div>
           </div>
         </div>
       </article>
     </li>
   );
 }
+

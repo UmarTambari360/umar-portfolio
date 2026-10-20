@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify, JWTPayload } from "jose";
 import { Response } from "express";
+import { env } from "./env.js";
 
 export interface AuthPayload extends JWTPayload {
   sub: string;
@@ -8,12 +9,11 @@ export interface AuthPayload extends JWTPayload {
 
 const COOKIE_NAME = "portfolio_token";
 
+// env.ts guarantees JWT_SECRET exists and is long enough, so this is encoded once.
+const SECRET_KEY: Uint8Array = new TextEncoder().encode(env.JWT_SECRET);
+
 function getSecretKey(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET environment variable is not defined.");
-  }
-  return new TextEncoder().encode(secret);
+  return SECRET_KEY;
 }
 
 export async function signJWT(username: string): Promise<string> {
@@ -46,7 +46,7 @@ export async function verifyJWT(token: string): Promise<AuthPayload | null> {
 }
 
 export function setAuthCookie(res: Response, token: string): void {
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = env.NODE_ENV === "production";
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     secure: isProduction,
@@ -57,7 +57,7 @@ export function setAuthCookie(res: Response, token: string): void {
 }
 
 export function clearAuthCookie(res: Response): void {
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = env.NODE_ENV === "production";
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
     secure: isProduction,
@@ -65,3 +65,4 @@ export function clearAuthCookie(res: Response): void {
     path: "/",
   });
 }
+

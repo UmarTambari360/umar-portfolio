@@ -83,7 +83,7 @@ async function parseResponse<T>(
   return body.data as T;
 }
 
-type Method = "GET" | "POST" | "PATCH" | "DELETE";
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 async function request<T>(
   method: Method,
@@ -121,6 +121,14 @@ export function apiPost<T>(
   return request<T>("POST", path, body, options);
 }
 
+export function apiPut<T>(
+  path: string,
+  body: unknown,
+  options: RequestOptions = {},
+): Promise<T> {
+  return request<T>("PUT", path, body, options);
+}
+
 export function apiPatch<T>(
   path: string,
   body: unknown,
@@ -135,3 +143,4 @@ export function apiDelete<T>(
 ): Promise<T> {
   return request<T>("DELETE", path, undefined, options);
 }
+

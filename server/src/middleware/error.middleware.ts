@@ -1,7 +1,14 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from "express";
+import { env } from "../lib/env.js";
 
 export interface CustomError extends Error {
   statusCode?: number;
+  status?: number;
+}
+
+/** Handles requests to /api/* that matched no route. */
+export function notFoundHandler(_req: Request, res: Response): void {
+  res.status(404).json({ error: { message: "Not found" } });
 }
 
 export const errorHandler: ErrorRequestHandler = (
@@ -10,17 +17,23 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next: NextFunction,
 ): void => {
-  const statusCode = err.statusCode ?? 500;
-  const message = err.message || "Internal Server Error";
+  // body-parser (malformed JSON, payload too large) sets `status`; HttpError sets `statusCode`.
+  const statusCode = err.statusCode ?? err.status ?? 500;
+  const isServerError = statusCode >= 500;
 
-  if (process.env.NODE_ENV !== "production") {
-    console.error(`[Error] ${statusCode} - ${message}`);
-    console.error(err.stack);
+  // Always log server errors, including in production: without this, a crashing
+  // route leaves no trace in `docker compose logs`.
+  if (isServerError) {
+    console.error(`[Error] ${statusCode} - ${err.message}`);
+    if (err.stack) console.error(err.stack);
   }
 
-  res.status(statusCode).json({
-    error: {
-      message,
-    },
-  });
+  // Never leak internals (SQL errors, stack details) to the client in production.
+  const message =
+    isServerError && env.NODE_ENV === "production"
+      ? "Internal Server Error"
+      : err.message || "Internal Server Error";
+
+  res.status(statusCode).json({ error: { message } });
 };
+
