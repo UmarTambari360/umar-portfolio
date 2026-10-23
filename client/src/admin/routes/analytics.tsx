@@ -1,24 +1,34 @@
 import { RefreshCw } from "lucide-react";
-import { BarChart } from "@/admin/components/bar-chart";
-import { Button } from "@/admin/components/button";
 import { PageHeader } from "@/admin/components/page-header";
-import { Skeleton } from "@/admin/components/skeleton";
 import { StatePanel } from "@/admin/components/state-panel";
+import { VisitorsChart } from "@/admin/components/visitors-chart";
 import { useAdminDocument } from "@/admin/hooks/use-admin-document";
 import { useAnalyticsStats } from "@/admin/hooks/use-analytics-stats";
 import { formatCount, formatDay, formatReferrer } from "@/admin/lib/format";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsStats } from "@/types/api";
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-card bg-surface p-6">
-      <dt className="text-micro font-bold tracking-label text-fg-muted uppercase">
-        {label}
-      </dt>
-      <dd className="mt-3 font-display text-h3 font-bold text-fg">
-        {formatCount(value)}
-      </dd>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardDescription className="text-micro font-bold tracking-label uppercase">
+          {label}
+        </CardDescription>
+        <CardTitle className="font-display text-h3 font-bold tabular-nums">
+          {formatCount(value)}
+        </CardTitle>
+      </CardHeader>
+    </Card>
   );
 }
 
@@ -28,7 +38,7 @@ interface RankedItem {
   count: number;
 }
 
-/** A ranked list with proportional bars. Renders nothing but the list or an empty note. */
+/** A ranked list with proportional bars (shadcn Progress). */
 function RankedList({
   title,
   items,
@@ -43,37 +53,40 @@ function RankedList({
   const highest = Math.max(1, ...items.map((item) => item.count));
 
   return (
-    <section className="rounded-card bg-surface p-6 md:p-8">
-      <h2 className="font-display text-title font-bold text-fg">{title}</h2>
-      {items.length === 0 ? (
-        <p className="mt-4 text-caption text-fg-muted">{emptyText}</p>
-      ) : (
-        <ol className="mt-6 grid gap-5">
-          {items.map((item) => (
-            <li key={item.key}>
-              <div className="flex items-baseline justify-between gap-4">
-                <span className="min-w-0 truncate text-body text-fg">
-                  {item.label}
-                </span>
-                <span className="shrink-0 text-caption text-fg-muted">
-                  {formatCount(item.count)}
-                  <span className="sr-only"> {countLabel}</span>
-                </span>
-              </div>
-              <div
-                aria-hidden
-                className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-raised"
-              >
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{ width: `${(item.count / highest) * 100}%` }}
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <h2 className="font-display text-title font-bold">{title}</h2>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-caption text-muted-foreground">{emptyText}</p>
+        ) : (
+          <ol className="grid gap-5">
+            {items.map((item) => (
+              <li key={item.key}>
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="min-w-0 truncate text-body text-foreground">
+                    {item.label}
+                  </span>
+                  <span className="shrink-0 text-caption text-muted-foreground">
+                    {formatCount(item.count)}
+                    <span className="sr-only"> {countLabel}</span>
+                  </span>
+                </div>
+                {/* The count is already in the text, so the bar is decoration. */}
+                <Progress
+                  aria-hidden
+                  value={(item.count / highest) * 100}
+                  className="mt-2 h-1.5"
                 />
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
+              </li>
+            ))}
+          </ol>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -95,29 +108,36 @@ function Dashboard({ stats }: { stats: AnalyticsStats }) {
 
   return (
     <div className="grid gap-6">
-      <dl className="grid gap-6 md:grid-cols-3">
+      <section
+        aria-label="Visitor totals"
+        className="grid gap-6 md:grid-cols-3"
+      >
         <StatCard label="All time" value={stats.totalVisitors} />
         <StatCard label="Last 7 days" value={stats.visitorsThisWeek} />
         <StatCard label="Last 30 days" value={stats.visitorsThisMonth} />
-      </dl>
+      </section>
 
-      <section className="rounded-card bg-surface p-6 md:p-8">
-        <h2 className="font-display text-title font-bold text-fg">
-          Visitors per day
-        </h2>
-        <p className="mt-2 text-caption text-fg-muted">
-          Last 30 days. Each person counts once per day, and no cookies or
-          personal data are stored.
-        </p>
-        <div className="mt-6">
-          <BarChart
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2 className="font-display text-title font-bold">
+              Visitors per day
+            </h2>
+          </CardTitle>
+          <CardDescription>
+            Last 30 days. Each person counts once per day, and no cookies or
+            personal data are stored.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <VisitorsChart
             data={chartData}
             unit="visitors"
             caption="Visitors per day for the last 30 days"
             summary={`Bar chart of daily visitors over the last 30 days: ${formatCount(stats.visitorsThisMonth)} in total.`}
           />
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <RankedList
@@ -159,7 +179,7 @@ export function Component() {
         actions={
           state.status === "success" ? (
             <Button
-              variant="secondary"
+              variant="outline"
               loading={refreshing}
               icon={<RefreshCw aria-hidden size={14} />}
               onClick={refresh}
@@ -197,4 +217,3 @@ export function Component() {
     </>
   );
 }
-

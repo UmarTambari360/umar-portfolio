@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { AdminShell } from "@/admin/components/admin-shell";
 import { AdminLoading } from "@/admin/components/admin-loading";
-import { Button } from "@/admin/components/button";
 import { StatePanel } from "@/admin/components/state-panel";
 import { useAdminDocument } from "@/admin/hooks/use-admin-document";
 import { useAuthStore } from "@/admin/stores/auth";
+import { Button } from "@/components/ui/button";
 
 /**
  * Route guard for everything under /admin except the login page. Asks the
@@ -29,7 +29,7 @@ export function Component() {
 
   if (status === "error") {
     return (
-      <div className="grid min-h-dvh place-items-center bg-bg px-6">
+      <div className="grid min-h-dvh place-items-center bg-background px-6">
         <div className="w-full max-w-md">
           <StatePanel
             tone="error"

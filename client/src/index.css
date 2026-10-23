@@ -1,4 +1,12 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+  shadcn/ui writes `dark:` utilities. This app switches themes with a
+  data-theme attribute on <html> (see index.html + stores/theme.ts), not a
+  `.dark` class, so the variant is bound to that attribute instead.
+*/
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
   Design tokens
@@ -6,6 +14,10 @@
   Dark is the default theme; [data-theme="light"] overrides it. Components use
   semantic utilities (bg-bg, text-fg-muted, border-border, text-accent-text...)
   and never hard-coded colors, so a theme switch needs no `dark:` variants.
+
+  The shadcn/ui names (--background, --primary, --muted...) further down are
+  plain ALIASES of these tokens. They are declared once on :root and follow the
+  active theme automatically, so there is still one source of truth.
 
   Dark + light base colors come from the design notes and were cross-checked
   against pixel samples of the supplied frames (within 1 channel for surfaces
@@ -57,6 +69,41 @@
   --art-fg: #f0f2e5;
   --art-bar: #f0f2e5;
   /* skeleton lines inside the light/dark cover panels */
+
+  /* ---- shadcn/ui aliases (do not hard-code colors here) ---- */
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--surface);
+  --card-foreground: var(--fg);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-fg);
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--fg);
+  --muted: var(--surface-raised);
+  --muted-foreground: var(--fg-muted);
+  /* shadcn's "accent" is the same token as this app's lime --accent */
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-fg);
+  --input: var(--border);
+  --ring: var(--focus-ring);
+  --radius: 0.5rem;
+
+  --chart-1: var(--accent);
+  --chart-2: var(--fg-muted);
+  --chart-3: var(--fg-subtle);
+  --chart-4: var(--border);
+  --chart-5: var(--danger);
+
+  --sidebar: var(--bg);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--accent-fg);
+  --sidebar-accent: var(--surface-raised);
+  --sidebar-accent-foreground: var(--fg);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--focus-ring);
 }
 
 :root[data-theme="light"] {
@@ -147,6 +194,13 @@
   --radius-card: 0.5rem;
   --radius-button: 0.1875rem;
 
+  /* shadcn/ui components use rounded-md/lg/xl. Point them at the brand radii
+     (3px controls, 8px panels) so no generated file needs editing. */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.1875rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.5rem;
+
   --container-page: 1220px;
 }
 
@@ -157,6 +211,9 @@
   --color-*: initial;
   --color-transparent: transparent;
   --color-current: currentColor;
+  /* shadcn overlays and a few badges use bg-black/50 and text-white. */
+  --color-black: #000000;
+  --color-white: #ffffff;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -176,6 +233,40 @@
   --color-art-ink-2: var(--art-ink-2);
   --color-art-fg: var(--art-fg);
   --color-art-bar: var(--art-bar);
+
+  /* shadcn/ui semantic colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent-foreground: var(--accent-fg);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 /* Optional escape hatch: `light:` variant for one-off overrides. */
@@ -192,6 +283,15 @@
 }
 
 @layer base {
+
+  /* Tailwind v4 defaults borders to currentColor; shadcn components write a
+     bare `border` and expect the theme's hairline color. */
+  *,
+  ::after,
+  ::before {
+    border-color: var(--border);
+  }
+
   html {
     background-color: var(--bg);
     scroll-behavior: smooth;
@@ -212,6 +312,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 
   /* Space Grotesk headlines run ~2% narrower in the design than the font's

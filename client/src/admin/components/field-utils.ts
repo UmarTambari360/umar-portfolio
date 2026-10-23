@@ -1,14 +1,8 @@
-import { cn } from "@/lib/cn";
+/** Label look shared by every admin field (uppercase micro caps). */
+export const FIELD_LABEL_CLASS =
+  "text-micro font-bold tracking-label text-muted-foreground uppercase";
 
-const CONTROL =
-  "w-full rounded-button border bg-bg px-4 text-body text-fg placeholder:text-fg-subtle";
-
-/** Shared look for text inputs, selects and textareas. */
-export function controlClasses(hasError: boolean, extra?: string): string {
-  return cn(CONTROL, hasError ? "border-danger" : "border-border", extra);
-}
-
-/** `aria-describedby` value for a control rendered inside a FieldFrame. */
+/** `aria-describedby` value for a control rendered inside a shadcn <Field>. */
 export function describedBy(
   id: string,
   hasHint: boolean,

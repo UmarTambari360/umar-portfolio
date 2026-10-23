@@ -1,10 +1,20 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { CircleAlert } from "lucide-react";
 import { AdminLoading } from "@/admin/components/admin-loading";
 import { TextField } from "@/admin/components/text-field";
 import { useAdminDocument } from "@/admin/hooks/use-admin-document";
 import { useAuthStore } from "@/admin/stores/auth";
-import { buttonClasses } from "@/components/ui/button-styles";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { FieldGroup } from "@/components/ui/field";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Wordmark } from "@/components/ui/wordmark";
 
@@ -70,85 +80,84 @@ export function Component() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg">
+    <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex items-center justify-between px-6 py-5 md:px-10.5">
         <Wordmark />
         <ThemeToggle />
       </header>
 
       <main className="flex flex-1 items-center justify-center px-6 pt-4 pb-12 md:px-10.5">
-        <section
-          aria-labelledby="login-heading"
-          className="relative w-full max-w-md overflow-hidden rounded-card bg-surface py-8 pr-6 pl-8 md:py-10 md:pr-10 md:pl-12"
-        >
-          <span
-            aria-hidden
-            className="absolute inset-y-0 left-0 w-1.5 bg-accent"
-          />
-          <p className="text-label font-medium tracking-label text-accent-text uppercase">
-            Admin
-          </p>
-          <h1
-            id="login-heading"
-            className="mt-3 font-display text-h3 font-bold text-fg uppercase"
-          >
-            Sign in
-          </h1>
-
-          {sessionExpired ? (
-            <p role="status" className="mt-5 text-caption text-fg-muted">
-              Your session expired. Sign in again to continue.
-            </p>
-          ) : null}
-
-          <form
-            className="mt-6 space-y-5"
-            onSubmit={(event) => {
-              void handleSubmit(event);
-            }}
-          >
-            <TextField
-              label="Username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              required
-              value={username}
-              onChange={(event) => {
-                setUsername(event.target.value);
-              }}
+        <section aria-labelledby="login-heading" className="w-full max-w-md">
+          <Card className="relative overflow-hidden">
+            <span
+              aria-hidden
+              className="absolute inset-y-0 left-0 w-1.5 bg-primary"
             />
-            <TextField
-              label="Password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-              }}
-            />
-
-            {error ? (
-              <p role="alert" className="text-caption text-danger">
-                {error}
+            <CardHeader>
+              <p className="text-label font-medium tracking-label text-accent-text uppercase">
+                Admin
               </p>
-            ) : null}
+              <CardTitle>
+                <h1
+                  id="login-heading"
+                  className="font-display text-h3 font-bold uppercase"
+                >
+                  Sign in
+                </h1>
+              </CardTitle>
+              {sessionExpired ? (
+                <CardDescription role="status">
+                  Your session expired. Sign in again to continue.
+                </CardDescription>
+              ) : null}
+            </CardHeader>
 
-            <button
-              type="submit"
-              disabled={pending}
-              className={buttonClasses(
-                "primary",
-                "w-full justify-center disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:brightness-100",
-              )}
-            >
-              {pending ? "Signing in…" : "Sign in"}
-            </button>
-          </form>
+            <CardContent>
+              <form
+                onSubmit={(event) => {
+                  void handleSubmit(event);
+                }}
+              >
+                <FieldGroup>
+                  <TextField
+                    label="Username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    required
+                    value={username}
+                    onChange={(event) => {
+                      setUsername(event.target.value);
+                    }}
+                  />
+                  <TextField
+                    label="Password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                    }}
+                  />
+
+                  {error ? (
+                    <Alert variant="destructive">
+                      <CircleAlert aria-hidden />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  ) : null}
+
+                  <Button type="submit" loading={pending} className="w-full">
+                    {pending ? "Signing in…" : "Sign in"}
+                  </Button>
+                </FieldGroup>
+              </form>
+            </CardContent>
+          </Card>
         </section>
       </main>
     </div>

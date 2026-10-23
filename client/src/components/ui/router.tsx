@@ -1,18 +1,6 @@
-import {
-  createBrowserRouter,
-  Navigate,
-  type RouteObject,
-} from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AdminLoading } from "@/admin/components/admin-loading";
-import App from "./App.tsx";
-
-/**
- * Development-only gallery of the admin form primitives. `import.meta.env.DEV`
- * is replaced at build time, so production contains neither the route nor the page.
- */
-const devRoutes: RouteObject[] = import.meta.env.DEV
-  ? [{ path: "kit", lazy: () => import("@/admin/routes/kit") }]
-  : [];
+import App from "../../App.tsx";
 
 /**
  * The public site stays at "/" exactly as before (App mounts the visit
@@ -47,7 +35,6 @@ export const router = createBrowserRouter([
         lazy: () => import("@/admin/routes/project-edit"),
       },
       { path: "analytics", lazy: () => import("@/admin/routes/analytics") },
-      ...devRoutes,
       { path: "*", element: <Navigate to="/admin/projects" replace /> },
     ],
   },

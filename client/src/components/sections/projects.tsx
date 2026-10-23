@@ -1,8 +1,11 @@
-import { WORK }                from "@/content/home";
+import { CircleAlert } from "lucide-react";
+import { WORK } from "@/content/home";
 import { useFeaturedProjects } from "@/hooks/use-featured-projects";
-import { Container }         from "@/components/ui/container";
-import { SectionHeading }  from "@/components/ui/section-heading";
-import { buttonClasses } from "@/components/ui/button-styles";
+import { Container } from "@/components/ui/container";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectCard } from "./project-card";
 
 function ProjectsSkeleton() {
@@ -11,10 +14,9 @@ function ProjectsSkeleton() {
       <span className="sr-only">Loading projects</span>
       <ul aria-hidden className="grid gap-5 lg:grid-cols-2 lg:gap-6">
         {[0, 1].map((key) => (
-          <li
-            key={key}
-            className="h-62.5 animate-pulse rounded-card bg-surface motion-reduce:animate-none lg:h-120"
-          />
+          <li key={key}>
+            <Skeleton className="h-62.5 w-full rounded-card bg-surface lg:h-120" />
+          </li>
         ))}
       </ul>
     </div>
@@ -42,19 +44,18 @@ export function Projects() {
           {state.status === "loading" ? <ProjectsSkeleton /> : null}
 
           {state.status === "error" ? (
-            <div role="alert" className="rounded-card bg-surface p-8">
-              <p className="font-display text-title font-bold">
+            <Alert variant="destructive" className="rounded-card p-6">
+              <CircleAlert aria-hidden />
+              <AlertTitle className="font-display text-title">
                 Couldn’t load projects.
-              </p>
-              <p className="mt-2 text-caption text-fg-muted">{state.message}</p>
-              <button
-                type="button"
-                onClick={retry}
-                className={buttonClasses("primary", "mt-6")}
-              >
-                Try again
-              </button>
-            </div>
+              </AlertTitle>
+              <AlertDescription>{state.message}</AlertDescription>
+              <div className="col-start-2 mt-4">
+                <Button size="lg" onClick={retry}>
+                  Try again
+                </Button>
+              </div>
+            </Alert>
           ) : null}
 
           {state.status === "success" && state.projects.length === 0 ? (

@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Button } from "@/admin/components/button";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { CircleAlert } from "lucide-react";
 import { SelectField } from "@/admin/components/select-field";
 import { SwitchField } from "@/admin/components/switch-field";
 import { TagInput } from "@/admin/components/tag-input";
@@ -17,6 +23,10 @@ import {
   type ProjectFormErrors,
   type ProjectFormValues,
 } from "@/admin/lib/project-form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldGroup } from "@/components/ui/field";
 import type { ProjectPayload, ProjectStatus } from "@/types/api";
 
 interface ProjectFormProps {
@@ -40,10 +50,16 @@ function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-card bg-surface p-6 md:p-8">
-      <h2 className="font-display text-title font-bold text-fg">{title}</h2>
-      <div className="mt-6 grid gap-6">{children}</div>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <h2 className="font-display text-title font-bold">{title}</h2>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <FieldGroup>{children}</FieldGroup>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -59,7 +75,7 @@ export function ProjectForm({
   const [errors, setErrors] = useState<ProjectFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const alertRef = useRef<HTMLParagraphElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
 
   // Bring the error message into view: on a long form the buttons (and the
   // message above them) are usually off-screen when Save is pressed.
@@ -178,8 +194,7 @@ export function ProjectForm({
           label="Status"
           options={STATUS_OPTIONS}
           value={values.status}
-          onChange={(event) => {
-            const next = event.target.value;
+          onValueChange={(next) => {
             if (isProjectStatus(next)) setField("status", next);
           }}
         />
@@ -251,17 +266,16 @@ export function ProjectForm({
       </FormSection>
 
       {submitError ? (
-        <p
-          ref={alertRef}
-          role="alert"
-          className="rounded-button border border-danger px-4 py-3 text-caption text-danger"
-        >
-          {submitError}
-        </p>
+        <div ref={alertRef}>
+          <Alert variant="destructive">
+            <CircleAlert aria-hidden />
+            <AlertDescription>{submitError}</AlertDescription>
+          </Alert>
+        </div>
       ) : null}
 
       <div className="flex flex-col-reverse gap-3 md:flex-row md:justify-end">
-        <Button variant="secondary" disabled={submitting} onClick={onCancel}>
+        <Button variant="outline" disabled={submitting} onClick={onCancel}>
           Cancel
         </Button>
         <Button type="submit" loading={submitting}>
@@ -271,4 +285,3 @@ export function ProjectForm({
     </form>
   );
 }
-

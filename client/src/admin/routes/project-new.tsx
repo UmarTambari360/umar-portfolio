@@ -20,7 +20,7 @@ export function Component() {
         actions={
           <ButtonLink
             to="/admin/projects"
-            variant="secondary"
+            variant="outline"
             icon={<ArrowLeft aria-hidden size={14} />}
           >
             All projects
@@ -45,4 +45,3 @@ export function Component() {
     </>
   );
 }
-

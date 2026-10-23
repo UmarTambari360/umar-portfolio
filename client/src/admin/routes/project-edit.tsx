@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/admin/components/button";
 import { ButtonLink } from "@/admin/components/button-link";
 import { PageHeader } from "@/admin/components/page-header";
 import { ProjectForm } from "@/admin/components/project-form";
-import { Skeleton } from "@/admin/components/skeleton";
 import { StatePanel } from "@/admin/components/state-panel";
 import { useAdminDocument } from "@/admin/hooks/use-admin-document";
 import { errorMessage } from "@/admin/lib/format";
 import { projectToFormValues } from "@/admin/lib/project-form";
 import { fetchProject, updateProject } from "@/admin/lib/projects-api";
 import { toast } from "@/admin/stores/toasts";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api";
 import type { Project } from "@/types/api";
 
@@ -24,7 +24,7 @@ type EditState =
 const BACK_LINK = (
   <ButtonLink
     to="/admin/projects"
-    variant="secondary"
+    variant="outline"
     icon={<ArrowLeft aria-hidden size={14} />}
   >
     All projects
@@ -143,4 +143,3 @@ export function Component() {
   // `key` remounts the editor when the id changes, resetting its state cleanly.
   return <ProjectEditor key={id} id={id} />;
 }
-

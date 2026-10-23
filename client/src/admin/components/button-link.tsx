@@ -1,47 +1,35 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import {
-  BUTTON_BASE,
-  BUTTON_SIZES,
-  LINK_VARIANTS,
-  type ButtonSize,
-  type ButtonVariant,
-} from "@/admin/components/button-styles";
-import { cn } from "@/lib/cn";
+import { Button, type ButtonProps } from "@/components/ui/button";
 
 /*
-  Same look as <Button>, but a real <a> (via react-router) for navigation, so
-  middle-click and "open in new tab" work. See LINK_VARIANTS for why the hover
-  rules differ from the button's.
+  shadcn's `<Button asChild>` around a react-router <Link>: same look as the
+  button, but a real <a>, so middle-click and "open in new tab" work.
 */
-interface ButtonLinkProps extends Omit<ComponentProps<typeof Link>, "className"> {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+interface ButtonLinkProps extends Omit<
+  ComponentProps<typeof Link>,
+  "className"
+> {
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
   icon?: ReactNode;
   className?: string;
 }
 
 export function ButtonLink({
-  variant = "primary",
-  size = "md",
+  variant,
+  size,
   icon,
   className,
   children,
   ...props
 }: ButtonLinkProps) {
   return (
-    <Link
-      className={cn(
-        BUTTON_BASE,
-        LINK_VARIANTS[variant],
-        BUTTON_SIZES[size],
-        className,
-      )}
-      {...props}
-    >
-      {icon}
-      {children}
-    </Link>
+    <Button asChild variant={variant} size={size} className={className}>
+      <Link {...props}>
+        {icon}
+        {children}
+      </Link>
+    </Button>
   );
 }
-

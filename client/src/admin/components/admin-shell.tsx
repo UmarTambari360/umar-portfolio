@@ -1,54 +1,33 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type MouseEvent,
-} from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import { Menu } from "lucide-react";
-import { AccountActions } from "@/admin/components/account-actions";
-import { AdminMobileMenu } from "@/admin/components/admin-mobile-menu";
-import { SidebarNav } from "@/admin/components/sidebar-nav";
-import { Toaster } from "@/admin/components/toaster";
+import { useEffect, useRef, type MouseEvent } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { AppSidebar } from "@/admin/components/app-sidebar";
 import { ADMIN_NAV } from "@/admin/nav-items";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Wordmark } from "@/components/ui/wordmark";
 
 /**
- * Layout for every signed-in admin page: sidebar from lg up, a top bar with a
- * full-screen menu below it, a skip link, focus moved to the page content on
- * navigation, and the toast region.
+ * Layout for every signed-in admin page, on shadcn's Sidebar: sidebar from md
+ * up and a slide-over sheet below it, a breadcrumb header, a skip link, focus
+ * moved to the page content on navigation, and the Sonner toast region.
  */
 export function AdminShell() {
   const { pathname } = useLocation();
-  const menuId = useId();
   const mainRef = useRef<HTMLElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousPath = useRef(pathname);
-
-  // The menu is "open for this path": changing page closes it with no effect needed.
-  const [menuPath, setMenuPath] = useState<string | null>(null);
-  const menuOpen = menuPath === pathname;
-
-  const closeMenu = useCallback((returnFocus: boolean) => {
-    setMenuPath(null);
-    if (returnFocus) menuButtonRef.current?.focus();
-  }, []);
-
-  // Growing past the mobile layout while the menu is open would leave it locked.
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 1024px)");
-    const onChange = () => {
-      if (query.matches) setMenuPath(null);
-    };
-    query.addEventListener("change", onChange);
-    return () => {
-      query.removeEventListener("change", onChange);
-    };
-  }, []);
 
   // Single-page navigation does not move focus; send it to the content so
   // keyboard and screen-reader users start at the new page.
@@ -66,7 +45,7 @@ export function AdminShell() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">
+    <SidebarProvider>
       <a
         href="#admin-main"
         onClick={skipToContent}
@@ -75,72 +54,47 @@ export function AdminShell() {
         Skip to content
       </a>
 
-      <aside className="sticky top-0 hidden h-dvh flex-col self-start border-r border-border lg:flex">
-        <div className="flex h-16 shrink-0 items-center px-6">
-          <Wordmark />
-        </div>
-        <nav
-          aria-label="Admin"
-          className="min-h-0 flex-1 overflow-y-auto px-3 py-4"
-        >
-          <SidebarNav />
-        </nav>
-        <div className="shrink-0 border-t border-border p-6">
-          <AccountActions />
-        </div>
-      </aside>
+      <AppSidebar />
 
-      <div className="flex min-h-dvh min-w-0 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-bg px-6 md:px-10.5 lg:px-10">
-          <div className="lg:hidden">
-            <Wordmark />
-          </div>
-          <p className="hidden text-label font-medium tracking-label text-fg-subtle uppercase lg:block">
-            Admin{" "}
-            <span aria-hidden className="mx-1">
-              /
-            </span>{" "}
-            {section?.label ?? "Dashboard"}
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="hidden lg:block">
-              <ThemeToggle />
-            </div>
-            <button
-              ref={menuButtonRef}
-              type="button"
-              aria-label="Open menu"
-              aria-expanded={menuOpen}
-              aria-controls={menuId}
-              onClick={() => {
-                setMenuPath(pathname);
-              }}
-              className="grid size-11 place-items-center rounded-full bg-surface-raised text-fg transition-colors hover:text-accent-text lg:hidden"
-            >
-              <Menu aria-hidden size={20} />
-            </button>
+      {/* SidebarInset renders the <main> landmark. */}
+      <SidebarInset
+        id="admin-main"
+        ref={mainRef}
+        tabIndex={-1}
+        className="min-w-0 outline-none"
+      >
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b bg-background px-4 md:px-6 lg:px-10">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="data-[orientation=vertical]:h-5"
+          />
+          <Breadcrumb>
+            <BreadcrumbList className="text-label font-medium tracking-label uppercase">
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink asChild>
+                  <Link to="/admin">Admin</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{section?.label ?? "Dashboard"}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <div className="ml-auto hidden md:block">
+            <ThemeToggle />
           </div>
         </header>
 
-        <main
-          id="admin-main"
-          ref={mainRef}
-          tabIndex={-1}
-          className="w-full flex-1 px-6 py-8 outline-none md:px-10.5 lg:px-10 lg:py-12"
-        >
+        <div className="w-full flex-1 px-4 py-8 md:px-6 lg:px-10 lg:py-12">
           <div className="w-full max-w-5xl">
             <Outlet />
           </div>
-        </main>
-      </div>
+        </div>
+      </SidebarInset>
 
-      <AdminMobileMenu
-        id={menuId}
-        open={menuOpen}
-        onClose={closeMenu}
-        closeButtonRef={closeButtonRef}
-      />
       <Toaster />
-    </div>
+    </SidebarProvider>
   );
 }

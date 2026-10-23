@@ -1,58 +1,74 @@
-import { useId, type ComponentPropsWithoutRef } from "react";
-import { ChevronDown } from "lucide-react";
-import { FieldFrame } from "@/admin/components/field";
-import { controlClasses, describedBy } from "@/admin/components/field-utils";
+import { useId } from "react";
+import { describedBy, FIELD_LABEL_CLASS } from "@/admin/components/field-utils";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
-interface SelectFieldProps extends Omit<
-  ComponentPropsWithoutRef<"select">,
-  "id" | "className" | "children"
-> {
+interface SelectFieldProps {
   label: string;
   options: readonly SelectOption[];
+  value: string;
+  onValueChange: (value: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
   error?: string | null;
   hint?: string;
 }
 
-/** Native <select> (best keyboard and screen-reader behavior) with a custom chevron. */
+/** shadcn Select (Radix) wrapped in a labelled Field. */
 export function SelectField({
   label,
   options,
+  value,
+  onValueChange,
+  disabled,
+  placeholder,
   error,
   hint,
-  ...props
 }: SelectFieldProps) {
   const id = useId();
 
   return (
-    <FieldFrame id={id} label={label} hint={hint} error={error}>
-      <div className="relative mt-2">
-        <select
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={id} className={FIELD_LABEL_CLASS}>
+        {label}
+      </FieldLabel>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+        <SelectTrigger
           id={id}
+          className="w-full"
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(id, Boolean(hint), Boolean(error))}
-          className={controlClasses(
-            Boolean(error),
-            "h-12 appearance-none pr-11",
-          )}
-          {...props}
         >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value}>
               {option.label}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <ChevronDown
-          aria-hidden
-          size={16}
-          className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-fg-muted"
-        />
-      </div>
-    </FieldFrame>
+        </SelectContent>
+      </Select>
+      {hint ? (
+        <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>
+      ) : null}
+      {error ? <FieldError id={`${id}-error`}>{error}</FieldError> : null}
+    </Field>
   );
 }

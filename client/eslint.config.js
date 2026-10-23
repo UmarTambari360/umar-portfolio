@@ -19,4 +19,15 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn/ui files are generated code: they export helpers next to their
+    // components (buttonVariants, useSidebar...) and sidebar.tsx calls
+    // Math.random() in a skeleton. Neither is a real problem, so the two
+    // matching rules are relaxed for this folder only.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/purity': 'off',
+    },
+  },
 ])

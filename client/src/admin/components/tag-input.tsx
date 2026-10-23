@@ -6,8 +6,15 @@ import {
   type KeyboardEvent,
 } from "react";
 import { X } from "lucide-react";
-import { FieldFrame } from "@/admin/components/field";
-import { describedBy } from "@/admin/components/field-utils";
+import { describedBy, FIELD_LABEL_CLASS } from "@/admin/components/field-utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 
 interface TagInputProps {
@@ -22,10 +29,11 @@ interface TagInputProps {
 }
 
 /**
- * Free-text tags. Enter or a comma adds one, Backspace on an empty field
- * removes the last, and leaving the field adds whatever was typed so nothing
- * is lost. Duplicates (any casing) and over-long tags are refused with a
- * message. Order is kept: it is the order the tags are shown in.
+ * Free-text tags built from shadcn Field, Input and Badge (shadcn has no tag
+ * input). Enter or a comma adds one, Backspace on an empty field removes the
+ * last, and leaving the field adds whatever was typed so nothing is lost.
+ * Duplicates (any casing) and over-long tags are refused with a message.
+ * Order is kept: it is the order the tags are shown in.
  */
 export function TagInput({
   label,
@@ -124,39 +132,43 @@ export function TagInput({
   };
 
   return (
-    <FieldFrame id={id} label={label} hint={hint} error={error}>
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={id} className={FIELD_LABEL_CLASS}>
+        {label}
+      </FieldLabel>
+      {/* Looks like an Input; the real (borderless) Input sits inside it. */}
       <div
         className={cn(
-          "mt-2 rounded-button border bg-bg p-2 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-focus-ring",
-          error ? "border-danger" : "border-border",
+          "flex flex-wrap items-center gap-2 rounded-md border border-input bg-transparent p-2 shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 dark:bg-input/30",
+          error &&
+            "border-destructive focus-within:border-destructive focus-within:ring-destructive/20",
         )}
       >
         {value.length > 0 ? (
-          <ul
-            aria-label={`${label} added`}
-            className="mb-2 flex flex-wrap gap-2"
-          >
+          <ul aria-label={`${label} added`} className="flex flex-wrap gap-2">
             {value.map((tag, index) => (
-              <li
-                key={tag.toLowerCase()}
-                className="inline-flex h-8 items-center gap-1 rounded-full border border-border bg-surface-raised pr-1 pl-3 text-micro font-medium tracking-label text-fg uppercase"
-              >
-                {tag}
-                <button
-                  type="button"
-                  aria-label={`Remove ${tag}`}
-                  onClick={() => {
-                    removeAt(index);
-                  }}
-                  className="grid size-6 place-items-center rounded-full text-fg-muted hover:bg-border hover:text-fg"
+              <li key={tag.toLowerCase()}>
+                <Badge
+                  variant="secondary"
+                  className="h-8 gap-1 rounded-full pr-1 pl-3 text-micro font-medium tracking-label uppercase"
                 >
-                  <X aria-hidden size={12} />
-                </button>
+                  {tag}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${tag}`}
+                    onClick={() => {
+                      removeAt(index);
+                    }}
+                    className="grid size-6 place-items-center rounded-full text-muted-foreground hover:bg-border hover:text-foreground"
+                  >
+                    <X aria-hidden size={12} />
+                  </button>
+                </Badge>
               </li>
             ))}
           </ul>
         ) : null}
-        <input
+        <Input
           ref={inputRef}
           id={id}
           type="text"
@@ -168,17 +180,21 @@ export function TagInput({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          className="h-8 w-full bg-transparent px-2 text-body text-fg outline-none placeholder:text-fg-subtle"
+          className="h-8 min-w-32 flex-1 border-0 bg-transparent px-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
       </div>
       {notice ? (
-        <p role="status" className="mt-2 text-caption text-fg-muted">
+        <p role="status" className="text-caption text-muted-foreground">
           {notice}
         </p>
       ) : null}
+      {hint ? (
+        <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>
+      ) : null}
+      {error ? <FieldError id={`${id}-error`}>{error}</FieldError> : null}
       <p role="status" className="sr-only">
         {announcement}
       </p>
-    </FieldFrame>
+    </Field>
   );
 }

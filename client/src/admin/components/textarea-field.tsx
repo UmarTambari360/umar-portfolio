@@ -1,6 +1,12 @@
 import { useId, type ComponentPropsWithoutRef } from "react";
-import { FieldFrame } from "@/admin/components/field";
-import { controlClasses, describedBy } from "@/admin/components/field-utils";
+import { describedBy, FIELD_LABEL_CLASS } from "@/admin/components/field-utils";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TextAreaFieldProps extends Omit<
   ComponentPropsWithoutRef<"textarea">,
@@ -27,22 +33,30 @@ export function TextAreaField({
   const id = useId();
 
   return (
-    <FieldFrame id={id} label={label} hint={hint} error={error}>
-      <textarea
+    <Field data-invalid={error ? true : undefined}>
+      <FieldLabel htmlFor={id} className={FIELD_LABEL_CLASS}>
+        {label}
+      </FieldLabel>
+      <Textarea
         id={id}
         value={value}
         rows={rows}
         maxLength={maxLength}
+        // shadcn's textarea auto-grows (field-sizing), so `rows` becomes a minimum height.
+        style={{ minHeight: `${rows * 1.5 + 1}rem` }}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, Boolean(hint), Boolean(error))}
-        className={controlClasses(Boolean(error), "mt-2 block resize-y py-3")}
         {...props}
       />
       {showCount && maxLength !== undefined ? (
-        <p className="mt-2 text-right text-caption text-fg-subtle">
+        <p className="text-right text-caption text-muted-foreground">
           {value.length} / {maxLength}
         </p>
       ) : null}
-    </FieldFrame>
+      {hint ? (
+        <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>
+      ) : null}
+      {error ? <FieldError id={`${id}-error`}>{error}</FieldError> : null}
+    </Field>
   );
 }

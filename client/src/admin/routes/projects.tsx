@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/admin/components/button";
 import { ButtonLink } from "@/admin/components/button-link";
 import { ConfirmDialog } from "@/admin/components/confirm-dialog";
 import { PageHeader } from "@/admin/components/page-header";
 import { ProjectRow } from "@/admin/components/project-row";
-import { Skeleton } from "@/admin/components/skeleton";
 import { StatePanel } from "@/admin/components/state-panel";
 import { useAdminDocument } from "@/admin/hooks/use-admin-document";
 import { useAdminProjects } from "@/admin/hooks/use-admin-projects";
@@ -16,8 +14,22 @@ import {
   updateProject,
 } from "@/admin/lib/projects-api";
 import { toast } from "@/admin/stores/toasts";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ApiError } from "@/lib/api";
 import type { Project } from "@/types/api";
+
+const HEAD_CLASS =
+  "text-micro font-bold tracking-label text-muted-foreground uppercase";
 
 export function Component() {
   useAdminDocument("Projects · Admin");
@@ -44,7 +56,9 @@ export function Component() {
     setBusyId(moving.id);
     setProjects(reordered); // optimistic: the row moves immediately
     try {
-      setProjects(await reorderProjects(reordered.map((project) => project.id)));
+      setProjects(
+        await reorderProjects(reordered.map((project) => project.id)),
+      );
       toast.info(`Moved ${moving.name} to position ${target + 1}.`);
     } catch (error) {
       setProjects(projects); // roll back to what the server last confirmed
@@ -94,10 +108,7 @@ export function Component() {
   };
 
   const addButton = (
-    <ButtonLink
-      to="/admin/projects/new"
-      icon={<Plus aria-hidden size={14} />}
-    >
+    <ButtonLink to="/admin/projects/new" icon={<Plus aria-hidden size={14} />}>
       Add project
     </ButtonLink>
   );
@@ -116,9 +127,9 @@ export function Component() {
         {state.status === "loading" ? (
           <div role="status" className="grid gap-4">
             <span className="sr-only">Loading projects</span>
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
+            <Skeleton className="h-14" />
+            <Skeleton className="h-14" />
+            <Skeleton className="h-14" />
           </div>
         ) : null}
 
@@ -142,29 +153,53 @@ export function Component() {
 
         {state.status === "success" && projects.length > 0 ? (
           <>
-            <ul className="grid gap-4">
-              {projects.map((project, index) => (
-                <ProjectRow
-                  key={project.id}
-                  project={project}
-                  position={index}
-                  total={projects.length}
-                  busy={busy}
-                  onMove={(direction) => {
-                    void move(index, direction);
-                  }}
-                  onToggleFeatured={() => {
-                    void toggleFeatured(project);
-                  }}
-                  onDelete={() => {
-                    setToDelete(project);
-                  }}
-                />
-              ))}
-            </ul>
-            <p className="mt-6 text-caption text-fg-muted">
-              {projects.length} {projects.length === 1 ? "project" : "projects"} ·{" "}
-              {featuredCount} featured on the homepage
+            <Card className="gap-0 overflow-hidden py-0">
+              <Table>
+                <TableCaption className="sr-only">
+                  Projects, in the order they appear on the homepage
+                </TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className={HEAD_CLASS}>
+                      <span className="sr-only">Position</span>
+                      <span aria-hidden>#</span>
+                    </TableHead>
+                    <TableHead className={HEAD_CLASS}>Project</TableHead>
+                    <TableHead className={`${HEAD_CLASS} hidden md:table-cell`}>
+                      Status
+                    </TableHead>
+                    <TableHead className={HEAD_CLASS}>Featured</TableHead>
+                    <TableHead className={HEAD_CLASS}>Order</TableHead>
+                    <TableHead className={HEAD_CLASS}>
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {projects.map((project, index) => (
+                    <ProjectRow
+                      key={project.id}
+                      project={project}
+                      position={index}
+                      total={projects.length}
+                      busy={busy}
+                      onMove={(direction) => {
+                        void move(index, direction);
+                      }}
+                      onToggleFeatured={() => {
+                        void toggleFeatured(project);
+                      }}
+                      onDelete={() => {
+                        setToDelete(project);
+                      }}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+            <p className="mt-6 text-caption text-muted-foreground">
+              {projects.length} {projects.length === 1 ? "project" : "projects"}{" "}
+              · {featuredCount} featured on the homepage
             </p>
           </>
         ) : null}
@@ -186,4 +221,3 @@ export function Component() {
     </>
   );
 }
-
