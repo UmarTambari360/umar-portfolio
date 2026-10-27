@@ -3,8 +3,8 @@
 import { env } from './lib/env.js';
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import * as helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/projects.routes.js';
@@ -21,7 +21,7 @@ const app: Express = express();
 // at 0 when the server is exposed directly: otherwise anyone could fake their IP.
 app.set('trust proxy', env.TRUST_PROXY);
 
-app.use(helmet());
+app.use(helmet.default());
 app.use(
   cors({
     origin: env.CLIENT_ORIGIN,
