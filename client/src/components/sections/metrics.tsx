@@ -2,6 +2,7 @@ import { ArrowDown } from "lucide-react";
 import { METRICS, METRICS_HINT } from "@/content/home";
 import { Container }     from "@/components/ui/container";
 import { buttonClasses } from "@/components/ui/button-styles";
+import { RevealItem, RevealStagger } from "@/components/motion/reveal";
 import { cn } from "@/lib/cn";
 
 export function Metrics() {
@@ -9,9 +10,17 @@ export function Metrics() {
     <section aria-label="At a glance">
       <Container>
         <div className="grid gap-8 border-t border-border pt-5 md:pt-4.75 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:pt-7">
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-3 lg:grid-cols-[repeat(3,minmax(0,305px))]">
+          <RevealStagger
+            as="ul"
+            stagger={0.1}
+            className="grid grid-cols-2 gap-x-6 gap-y-6 md:grid-cols-3 lg:grid-cols-[repeat(3,minmax(0,305px))]"
+          >
             {METRICS.map((metric) => (
-              <li key={metric.value} className="max-md:odd:last:col-span-2">
+              <RevealItem
+                as="li"
+                key={metric.value}
+                className="max-md:odd:last:col-span-2"
+              >
                 <p
                   className={cn(
                     "font-display text-[1.3125rem] font-bold uppercase md:text-[1.6875rem] lg:text-metric lg:leading-[1.55]",
@@ -23,9 +32,9 @@ export function Metrics() {
                 <p className="mt-0.5 text-micro tracking-label text-fg-subtle uppercase">
                   {metric.label}
                 </p>
-              </li>
+              </RevealItem>
             ))}
-          </ul>
+          </RevealStagger>
 
           <a
             href={METRICS_HINT.href}

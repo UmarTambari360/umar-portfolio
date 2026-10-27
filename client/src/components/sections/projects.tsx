@@ -1,6 +1,7 @@
 import { CircleAlert } from "lucide-react";
 import { WORK } from "@/content/home";
 import { useFeaturedProjects } from "@/hooks/use-featured-projects";
+import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,12 +34,14 @@ export function Projects() {
       className="scroll-mt-6 pt-13 pb-7.25 md:pt-11.5 lg:pt-22 lg:pb-12.5"
     >
       <Container>
-        <SectionHeading
-          id="work-heading"
-          eyebrow={WORK.eyebrow}
-          title={WORK.title}
-          description={WORK.description}
-        />
+        <Reveal>
+          <SectionHeading
+            id="work-heading"
+            eyebrow={WORK.eyebrow}
+            title={WORK.title}
+            description={WORK.description}
+          />
+        </Reveal>
 
         <div className="mt-2.75 md:mt-6.25 lg:mt-8">
           {state.status === "loading" ? <ProjectsSkeleton /> : null}

@@ -1,5 +1,6 @@
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Reveal } from "@/components/motion/reveal";
 import { buttonClasses } from "@/components/ui/button-styles";
 import { LinkButton } from "@/components/ui/link-button";
 import { trackProjectClick } from "@/lib/analytics";
@@ -38,8 +39,11 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
   };
 
   return (
-    <li className="min-w-0">
-      <article className="relative flex min-h-[250px] flex-col overflow-hidden rounded-card bg-surface lg:min-h-0">
+    // Each card reveals when IT scrolls into view; neighbours in the same row
+    // are offset slightly. The hover lift is driven by this <li>, which never
+    // moves, so the pointer cannot flicker at the card's bottom edge.
+    <Reveal as="li" delay={(index % 2) * 0.1} className="group/card min-w-0">
+      <article className="relative flex min-h-[250px] flex-col overflow-hidden rounded-card bg-surface transition-transform duration-300 ease-out group-hover/card:-translate-y-1 motion-reduce:transition-none motion-reduce:group-hover/card:translate-y-0 lg:min-h-0">
         <span
           aria-hidden
           className="absolute inset-y-0 left-0 w-[6px] bg-accent lg:hidden"
@@ -127,7 +131,6 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
           </div>
         </div>
       </article>
-    </li>
+    </Reveal>
   );
 }
-

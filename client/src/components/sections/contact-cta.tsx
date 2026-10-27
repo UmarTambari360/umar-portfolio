@@ -1,10 +1,13 @@
 import { Fragment }     from "react";
+import { m } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { CONTACT }      from "@/content/home";
 import { getContactHref } from "@/config/site";
+import { Reveal }      from "@/components/motion/reveal";
 import { Container }   from "@/components/ui/container";
 import { Eyebrow }    from "@/components/ui/eyebrow";
 import { LinkButton } from "@/components/ui/link-button";
+import { growY } from "@/lib/motion";
 
 export function ContactCta() {
   const contactHref = getContactHref();
@@ -16,10 +19,11 @@ export function ContactCta() {
       className="scroll-mt-6 pt-10 md:pt-12.5 lg:pt-33"
     >
       <Container>
-        <div className="relative overflow-hidden rounded-card bg-surface">
-          <span
+        <Reveal className="relative overflow-hidden rounded-card bg-surface">
+          <m.span
             aria-hidden
-            className="absolute inset-y-0 left-0 w-1.5 bg-accent"
+            variants={growY}
+            className="absolute inset-y-0 left-0 w-1.5 origin-top bg-accent"
           />
           <div className="grid gap-7 px-6 pt-8 pb-8 md:gap-10 md:px-8 md:pb-19 lg:grid-cols-[1fr_auto] lg:items-center lg:pt-12.5 lg:pr-20.75 lg:pb-17.25 lg:pl-8.25">
             <div>
@@ -50,7 +54,7 @@ export function ContactCta() {
               </LinkButton>
             ) : null}
           </div>
-        </div>
+        </Reveal>
       </Container>
     </section>
   );
