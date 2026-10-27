@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from "crypto";
 import { Router, Request, Response, NextFunction } from "express";
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import { env } from "../lib/env.js";
 import { firstIssueMessage } from "../lib/http-error.js";

@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
 import { trackPageView, getAnalyticsStats } from '../lib/analytics.js';
 import { firstIssueMessage } from '../lib/http-error.js';
 import { trackSchema } from '../lib/validations.js';
