@@ -3,7 +3,20 @@
 import { env } from './lib/env.js';
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import * as helmet from 'helmet';
+import {
+  contentSecurityPolicy,
+  crossOriginEmbedderPolicy,
+  crossOriginOpenerPolicy,
+  crossOriginResourcePolicy,
+  originAgentCluster,
+  referrerPolicy,
+  strictTransportSecurity,
+  xContentTypeOptions,
+  xDnsPrefetchControl,
+  xDownloadOptions,
+  xFrameOptions,
+  xPermittedCrossDomainPolicies,
+} from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
@@ -21,7 +34,21 @@ const app: Express = express();
 // at 0 when the server is exposed directly: otherwise anyone could fake their IP.
 app.set('trust proxy', env.TRUST_PROXY);
 
-app.use(helmet.default());
+app.disable('x-powered-by');
+app.use(
+  contentSecurityPolicy(),
+  crossOriginEmbedderPolicy(),
+  crossOriginOpenerPolicy(),
+  crossOriginResourcePolicy(),
+  originAgentCluster(),
+  referrerPolicy(),
+  strictTransportSecurity(),
+  xContentTypeOptions(),
+  xDnsPrefetchControl(),
+  xDownloadOptions(),
+  xFrameOptions(),
+  xPermittedCrossDomainPolicies(),
+);
 app.use(
   cors({
     origin: env.CLIENT_ORIGIN,
